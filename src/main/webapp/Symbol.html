@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+  <title>GeoJSON</title>
+  <link rel="stylesheet" href="https://cache.amap.com/lbs/static/main1119.css"/>
+  <script src="//webapi.amap.com/maps?v=1.4.10&key=21a57692806ce69ba201c19633f476dd"></script>
+
+  <script src="../../js/jquery.min.js"></script>
+</head>
+<body>
+<div id="container"></div>
+<script type="text/javascript">
+    var map = new AMap.Map("container", {
+        resizeEnable: true,
+        center: [107.80625,30.12936],
+        pitchEnable:true,
+        pitch:40,
+        zoom: 7,
+        layers: [
+
+
+          //  new AMap.TileLayer.Satellite(),
+            new AMap.TileLayer.RoadNet()
+        ],
+    });
+    //var geojsonURL = 'https://a.amap.com/jsapi_demos/static/geojson/chongqing.json';
+    var geojsonURL='../../geojson/cq.geojson';
+    var geojsonURL1='../../geojson/Chongqing.geojson';
+    var geojsonURL2='../../js/map2.geojson';
+    var geojsonURL3='../../geojson/Chongqing2.geojson';
+    var geojsonURL4='../../geojson/dianjiang.json';
+    var geojsonURL5='../../geojson/map3.geojson';
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var geojson = new AMap.GeoJSON({
+                geoJSON:JSON.parse(xhr.responseText),     //geojsonObject,
+                'getPolygon': function(geojson, lnglats) {//还可以自定义getMarker和getPolyline
+                    var area = AMap.GeometryUtil.ringArea(lnglats[0])//求面积
+                    return new AMap.Polygon({
+                        path: lnglats,
+                       /* area/8000000000*/
+                        fillOpacity:1-Math.sqrt(0.5),//面积越大透明度越高
+                        strokeColor:'white',
+                        fillColor:'red'
+
+                    });
+                }
+            });
+           // geojson.importData(JSON.parse(xhr.responseText));
+            geojson.setMap(map);
+            geojson.show();
+           // geojson.show();
+        }
+    };
+
+    xhr.open('GET',geojsonURL1);
+
+    xhr.send();
+
+
+</script>
+
+</body>
+</html>

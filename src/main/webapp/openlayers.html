@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GeoJSON</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.6.4/css/ol.css" type="text/css">
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+    <script src="https://openlayers.org/en/v5.2.0/build/ol.js"></script>
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <script>
+        var projection = ol.proj.get("EPSG:3857");
+        var resolutions = [];
+        for (var i = 0; i < 19; i++) {
+            resolutions[i] = Math.pow(2, 18 - i);
+        }
+        var tilegrid = new ol.tilegrid.TileGrid({
+            origin: [0, 0],
+            resolutions: resolutions
+        });
+
+        var baidu_source = new ol.source.TileImage({
+            projection: projection,
+            tileGrid: tilegrid,
+            tileUrlFunction: function (tileCoord, pixelRatio, proj) {
+                if (!tileCoord) {
+                    return "";
+                }
+                var z = tileCoord[0];
+                var x = tileCoord[1];
+                var y = tileCoord[2];
+
+                if (x < 0) {
+                    x = "M" + (-x);
+                }
+                if (y < 0) {
+                    y = "M" + (-y);
+                }
+
+                return "http://online3.map.bdimg.com/onlinelabel/?qt=tile&x=" + x + "&y=" + y + "&z=" + z + "&styles=pl&udt=20151021&scaler=1&p=1";
+            }
+        });
+
+
+
+      var image = new ol.style.Circle({
+        radius: 5,
+        fill: null,
+        stroke: new ol.style.Stroke({color: 'red', width: 1})
+      });
+
+      var styles = {
+    	        'MultiPolygon': new ol.style.Style({
+    	            stroke: new ol.style.Stroke({
+    	              color: 'red',
+    	              width: 1
+    	            }),
+    	            fill: new ol.style.Fill({
+    	             color: 'rgba(255, 0, 0, 0.4)'
+
+    	            })
+
+    	          })
+      };
+
+      var styleFunction = function(feature) {
+        return styles[feature.getGeometry().getType()];
+      };
+
+
+      var GeoJsonLayer = new ol.layer.Vector({
+          title: 'add Layer',
+          source: new ol.source.Vector({
+              projection: 'EPSG:4326',
+              url: '../../geojson/dianjiang.json',
+            //  url:'../../geojson/map2.geojson',
+              format:new ol.format.GeoJSON(),
+
+            /*  format: new ol.format.GeoJSON({
+                  read: function(json,type,filter){
+                      var geojson = new ol.format.GeoJSON();
+                      var features =geojson.read(json,"FeatureCollection");//FeatureConllection与json数据中type对应
+                      refreshData(features);
+                  }
+              })*/
+          }),
+
+
+          image:image,
+          style: styleFunction
+      });
+        var pan;
+        function onMove(){
+            map.getInteractions().forEach(function(element,index,array){
+                if(element instanceof ol.interaction.DragPan)
+                    pan = element;
+                pan.setActive(true);
+            });
+        }
+      var map = new ol.Map({
+        layers: [
+  /*        new ol.layer.Tile({
+            source: new ol.source.OSM()
+          }),*/
+   /*        new ol.layer.Tile({
+              source: '../../osm/abc_01.osm'
+          }),*/
+            /*new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: 'http://www.google.cn/maps/vt/pb=!1m4!1m3!1i{z}!2i{x}!3i{y}!2m3!1e0!2sm!3i380072576!3m8!2szh-CN!3scn!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e0!5m1!1e0'
+                })
+            }),*/
+      /*    new ol.layer.Tile({
+              title: "天地图路网",
+              source: new ol.source.XYZ({
+                  url: "http://t4.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}"
+              })
+          }),*/
+
+
+           /* new ol.layer.Tile({
+                title: "谷歌影像",
+                source: new ol.source.XYZ({
+                   /!* url: "http://t0.tianditu.com/vec_c/wmts", //中国底图*!/
+                    url: 'http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'
+                }),
+            }),
+
+            new ol.layer.Tile({
+                title: "谷歌地图文字标注",
+                source: new ol.source.XYZ({
+                    /!*url: "http://t0.tianditu.com/cva_c/wmts", //中国底图注记*!/
+                    url: 'http://www.google.cn/maps/vt?lyrs=h@189&gl=cn&x={x}&y={y}&z={z}'
+                })
+            }),*/
+
+          /*  new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: 'http://wprd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}'
+                })
+            }),*/
+            new ol.layer.Tile({
+                source: baidu_source
+            }),
+          GeoJsonLayer
+        ],
+        target: 'map',
+        controls: ol.control.defaults({
+          attributionOptions: {
+            collapsible: true
+          }
+        }),
+        view: new ol.View({
+            center: ol.proj.transform([107.35, 30.33], 'EPSG:4326', 'EPSG:3857'),
+            zoom: 12,
+            projection: 'EPSG:3857'
+        })
+      });
+    </script>
+
+  </body>
+</html>
